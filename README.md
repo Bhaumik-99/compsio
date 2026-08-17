@@ -35,6 +35,7 @@ productops/
 ├── index.html              # ← THE DELIVERABLE (single self-contained HTML report with SSGOI spring sheet drawer)
 ├── research-agent/
 │   ├── agent.py            # Automated research validation & clustering CLI
+│   ├── composio_researcher.py # Composio SDK & MCP ToolSet research agent script
 │   └── apps.json           # Structured research data (100 apps × 11 fields)
 └── README.md               # Project documentation & execution guide
 ```
@@ -49,14 +50,13 @@ productops/
 
 ## How the Research Agent Works
 
-### Architecture
-The research pipeline uses an AI orchestration layer (Gemini/Antigravity IDE) to:
+### Architecture & Composio ToolSet Integration
+The research pipeline is built using **Composio SDK & MCP ToolSet** patterns:
 
-1. **Input**: 100 apps with category and website hints
-2. **Web Search**: Automated queries to developer docs, API references, auth pages for each app
-3. **URL Reading**: Direct fetching and parsing of developer documentation pages
-4. **Curated Knowledge**: Well-known platforms (Salesforce, Stripe, GitHub, etc.) verified against current docs
-5. **Structured Extraction**: Normalized into a JSON schema with 11 fields per app
+1. **Composio ToolSet Actions**: Equips the agent with autonomous search (`Action.TAVILY_SEARCH`), web scraping (`Action.FIRECRAWL_SCRAPE`), and documentation inspection (`Action.HTTP_REQUEST`).
+2. **MCP Discovery**: Checks active MCP servers and registries to identify existing agent-callable tooling.
+3. **Structured Extraction**: Normalizes findings into a strict 11-field JSON schema per app.
+4. **Validation & Clustering**: Automated CLI validates all 100 records and computes statistical distributions.
 6. **Pattern Analysis**: Statistical analysis across the full dataset
 7. **HTML Generation**: Single-page deliverable with embedded data and visualizations
 
