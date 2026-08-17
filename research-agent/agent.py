@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import argparse
 from collections import Counter
 from typing import Dict, List, Any
 
@@ -27,7 +28,6 @@ def validate_schema(data: List[Dict[str, Any]]) -> bool:
         errors.append(f"Expected exactly 100 apps, found {len(data)}")
 
     for i, app in enumerate(data, start=1):
-        app_id = app.get("id")
         name = app.get("name", f"App #{i}")
         
         required_fields = ["id", "name", "category", "description", "auth_methods", 
@@ -129,10 +129,39 @@ def run_verification_sample(data: List[Dict[str, Any]]):
     accuracy = (passed / len(sample_apps)) * 100
     print(f"[SUCCESS] Automated cross-check passed: {passed}/{len(sample_apps)} verified ({accuracy:.1f}%)")
 
+def query_app_pipeline(query: str, data: List[Dict[str, Any]]):
+    q = query.lower().strip()
+    matches = [a for a in data if q in a["name"].lower() or q in a["category"].lower()]
+    if not matches:
+        print(f"[INFO] No records matching '{query}'.")
+        return
+    print(f"\n[AGENT PIPELINE] Found {len(matches)} matching app(s):")
+    for m in matches[:5]:
+        print(f"\n--- [{m['id']}] {m['name']} ({m['category']}) ---")
+        print(f"  Description   : {m['description']}")
+        print(f"  Auth Method   : {', '.join(m['auth_methods'])}")
+        print(f"  Self-Serve    : {m['self_serve']}")
+        print(f"  API Surface   : {m['api_type']} ({m['api_breadth']} breadth)")
+        print(f"  MCP Server    : {'Yes' if m['has_mcp'] else 'No'}")
+        print(f"  Verdict       : {m['buildability'].upper()}")
+        print(f"  Blocker       : {m['main_blocker']}")
+        print(f"  Docs URL      : {m['docs_url']}")
+        print(f"  Evidence Notes: {m['evidence']}")
+
 def main():
+    parser = argparse.ArgumentParser(description="Composio 100-App Research Agent CLI")
+    parser.add_argument("--query", "-q", type=str, help="Query intel for a specific app or category")
+    parser.add_argument("--verify", action="store_true", help="Run stratified verification audit")
+    args = parser.parse_args()
+
     data = load_data()
     valid = validate_schema(data)
-    if valid:
+    if not valid:
+        sys.exit(1)
+
+    if args.query:
+        query_app_pipeline(args.query, data)
+    else:
         generate_insights(data)
         run_verification_sample(data)
 
